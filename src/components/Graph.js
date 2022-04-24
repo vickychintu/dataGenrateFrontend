@@ -2,19 +2,21 @@ import React, { useEffect, useState } from "react";
 import styled from 'styled-components';
 import { Tooltip } from "@mui/material";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import Fab from '@mui/material/Fab';
 
 const yAxis = [];
 for (let i=100; i>=0; i-=10)
     yAxis.push(i);
 
 const xAxis = [];
-for (let i=1; i<=24; i++) 
-    xAxis.push(i);
+for (let i=0; i<=23; i++) 
+    xAxis.push(String(i));
 
 const Graph = () => {
 
     const [cellHeight, setCellHeight] = useState(0);
-    const [selectedCell, setSelectedCell] = useState(Array.from({length: 24}, (v, k) => 0))
+    var selectedCell = (Array.from({length: 24}, (v, k) => 0));
+    // const [disableSubmit, setDisableSubmit] = useState(true);
 
     useEffect(() => {
         //convert from px to vh and set cell height
@@ -33,19 +35,43 @@ const Graph = () => {
         element.style.setProperty('--after-background', colors[randomColorIndex]);
         element.style.setProperty('--after-border', '1px solid '+ colors[randomColorIndex]);
         element.setAttribute('value', ((maxBarCell-cell)+1)*10);
+        var newSelectedCell = [];
+        selectedCell.map((val, index) => {
+            return (
+                (index === column) ?
+                newSelectedCell.push(maxBarCell - cell)
+                :
+                newSelectedCell.push(val)
+            )
+        });
+        selectedCell[column] = ((maxBarCell-cell)+1)*10;
     }
 
     const setBarColumnHeight = (indexColumn, indexCell) => {
-        const maxBarCell = yAxis.length - 1;
-        var newSelectedCell = [];
-        selectedCell.map((val, index) => {
-            if (index === indexColumn) 
-                newSelectedCell.push(maxBarCell - indexCell);
-            else 
-                newSelectedCell.push(val);
-        });
         drawBar(indexColumn, indexCell);
-        setSelectedCell(newSelectedCell);
+    }
+
+    const checkZero = (arr) => {
+        return arr.every(element => element === 0);
+    }
+
+    const submitHandler = () => {
+        // setDisableSubmit(false);
+        if(checkZero(selectedCell)) {
+            return;
+        }
+        alert("Graph submitted: " + selectedCell);
+        resetHandler();
+    }
+
+    const resetHandler = () => {
+        selectedCell = (Array.from({length: 24}, (v, k) => 0));
+        for (let i=0; i<24; i++) {
+            let element = document.querySelector('#bar-column-'+i);
+            element.style.setProperty('--after-height', '0vh');
+            element.style.setProperty('--after-border', 'none');
+            element.setAttribute('value', '');
+        }
     }
 
 
@@ -76,7 +102,7 @@ const Graph = () => {
                                             yAxis.map((yval, index2) => {
                                                 return (
                                                     <>
-                                                    <Tooltip title={(index1===yAxis.length-1||index2===0) ? "":(10-index2+1)*10} arrow followCursor>
+                                                    <Tooltip title={(index2===0) ? "":(10-index2+1)*10} arrow followCursor>
                                                     <div key={index2} id={'column-'+index1+'-cell-'+index2} onClick={() => setBarColumnHeight(index1, index2)}></div>
                                                     </Tooltip>
                                                     </>
@@ -103,6 +129,14 @@ const Graph = () => {
                     }
                 </div>
                 <div className="xaxis-label"><ArrowRightAltIcon style={{ transform: 'rotate(180deg)'}}/><span className="xaxis-label-text">Hour</span><ArrowRightAltIcon/></div>
+            </div>
+            <div className="float-btns">
+            <Fab className="submit-btn" onClick={submitHandler} variant="extended" color="primary">
+                SUBMIT
+            </Fab>
+            <Fab className="reset-btn" onClick={resetHandler} variant="extended">
+                RESET
+            </Fab>
             </div>
         </GraphContainer>
     );
@@ -262,6 +296,15 @@ const GraphContainer = styled.div`
             .xaxis-label-text {
                 margin: 0 2rem;
             }
+        }
+    }
+    .float-btns {
+        display: flex;
+        flex-direction: column;
+        margin-left: 1rem;
+
+        .submit-btn {
+            margin-bottom: 1rem;
         }
     }
 `;
