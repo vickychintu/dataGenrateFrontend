@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import styled from 'styled-components';
+import { Tooltip } from "@mui/material";
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
 const yAxis = [];
 for (let i=100; i>=0; i-=10)
     yAxis.push(i);
 
 const xAxis = [];
-for (let i=0; i<=24; i++) 
+for (let i=1; i<=24; i++) 
     xAxis.push(i);
 
 const Graph = () => {
@@ -21,12 +23,16 @@ const Graph = () => {
 
     const drawBar = (column, cell) => {
         const maxBarCell = yAxis.length - 1;
+        //if top cell is clicked then return
+        if (cell === 0)
+            return;
         var colors = ['#d9534f', '#5bc0de', '#5cb85c', '#66b2b2', '#c9c9ff', '#f1cbff'];
         const randomColorIndex = (Math.floor(Math.random() * colors.length))
         var element = document.querySelector('#bar-column-'+column);
         element.style.setProperty('--after-height', cellHeight*((maxBarCell - cell)+1)+'vh');
         element.style.setProperty('--after-background', colors[randomColorIndex]);
         element.style.setProperty('--after-border', '1px solid '+ colors[randomColorIndex]);
+        element.setAttribute('value', ((maxBarCell-cell)+1)*10);
     }
 
     const setBarColumnHeight = (indexColumn, indexCell) => {
@@ -45,6 +51,7 @@ const Graph = () => {
 
     return (
         <GraphContainer>
+            <div className="yaxis-label"><ArrowRightAltIcon style={{transform: 'rotate(-90deg)'}}/><span className="yaxis-label-text">Y-Axis</span><ArrowRightAltIcon style={{transform: 'rotate(90deg)'}}/></div>
             <div className="y-marker">
                 {
                     yAxis.map((yaxis, index) => {
@@ -68,7 +75,12 @@ const Graph = () => {
                                         {
                                             yAxis.map((yval, index2) => {
                                                 return (
+                                                    <>
+                                                    <Tooltip title={(index1===yAxis.length-1||index2===0) ? "":(10-index2+1)*10} arrow followCursor>
                                                     <div key={index2} id={'column-'+index1+'-cell-'+index2} onClick={() => setBarColumnHeight(index1, index2)}></div>
+                                                    </Tooltip>
+                                                    </>
+                                                    
                                                 )
                                             })
                                         }
@@ -90,6 +102,7 @@ const Graph = () => {
                         })
                     }
                 </div>
+                <div className="xaxis-label"><ArrowRightAltIcon style={{ transform: 'rotate(180deg)'}}/><span className="xaxis-label-text">Hour</span><ArrowRightAltIcon/></div>
             </div>
         </GraphContainer>
     );
@@ -103,7 +116,23 @@ const GraphContainer = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #14207a;
+    background-color: #131324;
+
+    .yaxis-label {
+        display: flex;
+        flex-direction: column;
+        width: auto;
+        color: #fff;
+        font-size: 1.2rem;
+        align-items: center;
+
+        .yaxis-label-text {
+            text-transform: uppercase;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            margin: 2rem 2rem;
+        }
+    }
 
     .y-marker {
         height: 70vh;
@@ -152,6 +181,7 @@ const GraphContainer = styled.div`
                 --after-background: #fff;
                 --after-border: 0px solid transparent;
 
+
                 .bar-column {
                     width: 100%;
                     border: 1px solid #424949;
@@ -173,6 +203,7 @@ const GraphContainer = styled.div`
                         border-top: none;
                         border-bottom: none;
                         z-index: 1;
+                        color: #fff;
                     }
 
                     div:nth-child(1) {
@@ -183,14 +214,15 @@ const GraphContainer = styled.div`
 
                 .bar-column::after {
                     position: absolute;
-                    content: "";
+                    content: attr(value);
+                    color: #fff;
                     background-color: var(--after-background);
                     height: var(--after-height);
                     width: 2vw;
-                    transition: 2s;
+                    transition: 2s ease-out;
                     display: flex;
                     align-items: center;
-                    justify-content: flex-end;
+                    justify-content: center;
                     border: var(--after-border);
                 }
             }
@@ -205,16 +237,30 @@ const GraphContainer = styled.div`
                 display: flex;
                 flex-direction: column;
                 color: #fff;
+                align-items: center;
 
                 hr {
                     width: 0;
-                    height: 2vh
+                    height: 2vh;
                 }
 
                 span {
                     margin-left: -0.2vw;
                     margin-top: 1vh;
                 }
+            }
+        }
+
+        .xaxis-label {
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+
+            .xaxis-label-text {
+                margin: 0 2rem;
             }
         }
     }
