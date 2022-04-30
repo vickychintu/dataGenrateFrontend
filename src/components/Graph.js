@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import styled from 'styled-components';
 import { Tooltip } from "@mui/material";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import Fab from '@mui/material/Fab';
+import { GraphContainer } from "./GraphStyles";
 
 const yAxis = [];
 for (let i=100; i>=0; i-=10)
@@ -15,7 +15,8 @@ for (let i=0; i<=23; i++)
 const Graph = () => {
 
     const [cellHeight, setCellHeight] = useState(0);
-    var selectedCell = (Array.from({length: 24}, (v, k) => 0));
+    const [lockedColumn, setLockedColumn] = useState(Array.from({length: 24}, (v, k) => 0));
+    const [previousData, setPreviousData] = useState(Array.from({length: 24}, (v, k) => 0));
     // const [disableSubmit, setDisableSubmit] = useState(true);
 
     useEffect(() => {
@@ -31,24 +32,49 @@ const Graph = () => {
         var colors = ['#d9534f', '#5bc0de', '#5cb85c', '#66b2b2', '#c9c9ff', '#f1cbff'];
         const randomColorIndex = (Math.floor(Math.random() * colors.length))
         var element = document.querySelector('#bar-column-'+column);
-        element.style.setProperty('--after-height', cellHeight*((maxBarCell - cell)+1)+'vh');
+        element.style.setProperty('--after-height', (cellHeight*((maxBarCell - cell)+1))-0.4+'vh');
         element.style.setProperty('--after-background', colors[randomColorIndex]);
         element.style.setProperty('--after-border', '1px solid '+ colors[randomColorIndex]);
         element.setAttribute('value', ((maxBarCell-cell)+1)*10);
-        var newSelectedCell = [];
-        selectedCell.map((val, index) => {
-            return (
-                (index === column) ?
-                newSelectedCell.push(maxBarCell - cell)
-                :
-                newSelectedCell.push(val)
-            )
-        });
-        selectedCell[column] = ((maxBarCell-cell)+1)*10;
     }
 
     const setBarColumnHeight = (indexColumn, indexCell) => {
         drawBar(indexColumn, indexCell);
+    }
+
+    const removeBar = (column, cell) => {
+        var element = document.querySelector('#bar-column-'+column);
+        element.style.setProperty('--after-height', '0');
+        element.style.setProperty('--after-border', '0px solid transparent');
+        element.setAttribute('value', '');
+    }
+
+    const lockBar = (column, cell) => {
+        var element = document.querySelector('#bar-column-'+column);
+        const maxBarCell = yAxis.length - 1;
+        var temp = [];
+        if (!lockedColumn[column]) {
+            lockedColumn.map((val, index) => {
+                return (
+                    (index === column) ?
+                    temp.push(((maxBarCell-cell)+1)*10)
+                    :
+                    temp.push(val)
+                )
+            });
+            setLockedColumn(temp);
+            element.style.setProperty('--after-height', cellHeight*((maxBarCell - cell)+1)+'vh');
+        } else {
+            lockedColumn.map((val, index) => {
+                return (
+                    (index === column) ?
+                    temp.push(0)
+                    :
+                    temp.push(val)
+                )
+            });
+            setLockedColumn(temp);
+        }
     }
 
     const checkZero = (arr) => {
@@ -57,21 +83,39 @@ const Graph = () => {
 
     const submitHandler = () => {
         // setDisableSubmit(false);
-        if(checkZero(selectedCell)) {
+        if(checkZero(lockedColumn)) {
             return;
         }
-        alert("Graph submitted: " + selectedCell);
+        alert(lockedColumn);
         resetHandler();
+        setPreviousData(lockedColumn);
     }
 
     const resetHandler = () => {
-        selectedCell = (Array.from({length: 24}, (v, k) => 0));
+        setLockedColumn(Array.from({length: 24}, (v, k) => 0));
         for (let i=0; i<24; i++) {
             let element = document.querySelector('#bar-column-'+i);
             element.style.setProperty('--after-height', '0vh');
             element.style.setProperty('--after-border', 'none');
             element.setAttribute('value', '');
         }
+    }
+
+    const undoHandler = () => {
+        for (let column=0; column<24; column++) {
+            //if top cell is clicked then return
+            if (previousData[column] === 0)
+                continue;
+            console.log(previousData[column]/10)
+            var colors = ['#d9534f', '#5bc0de', '#5cb85c', '#66b2b2', '#c9c9ff', '#f1cbff'];
+            const randomColorIndex = (Math.floor(Math.random() * colors.length))
+            var element = document.querySelector('#bar-column-'+column);
+            element.style.setProperty('--after-height', ((cellHeight)*(previousData[column]/10)+1)-1.3+'vh');
+            element.style.setProperty('--after-background', colors[randomColorIndex]);
+            element.style.setProperty('--after-border', '1px solid '+ colors[randomColorIndex]);
+            element.setAttribute('value', previousData[column]);
+        }
+        setLockedColumn(previousData);
     }
 
 
@@ -103,7 +147,13 @@ const Graph = () => {
                                                 return (
                                                     <>
                                                     <Tooltip title={(index2===0) ? "":(10-index2+1)*10} arrow followCursor>
-                                                    <div key={index2} id={'column-'+index1+'-cell-'+index2} onClick={() => setBarColumnHeight(index1, index2)}></div>
+                                                    <div key={index2} id={'column-'+index1+'-cell-'+index2} 
+                                                    
+                                                    onMouseOver={() => lockedColumn[index1]===0 ? setBarColumnHeight(index1, index2) : null} 
+                                                    
+                                                    onMouseOut={() => lockedColumn[index1]===0 ? removeBar(index1, index2) : null} 
+                                                    
+                                                    onClick={() => lockBar(index1, index2)}></div>
                                                     </Tooltip>
                                                     </>
                                                     
@@ -134,6 +184,9 @@ const Graph = () => {
             <Fab className="submit-btn" onClick={submitHandler} variant="extended" color="primary">
                 SUBMIT
             </Fab>
+            <Fab className="undo-btn" onClick={undoHandler} variant="extended" color="secondary">
+                UNDO
+            </Fab>
             <Fab className="reset-btn" onClick={resetHandler} variant="extended">
                 RESET
             </Fab>
@@ -143,168 +196,3 @@ const Graph = () => {
 }
 
 export default Graph;
-
-const GraphContainer = styled.div`
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #131324;
-
-    .yaxis-label {
-        display: flex;
-        flex-direction: column;
-        width: auto;
-        color: #fff;
-        font-size: 1.2rem;
-        align-items: center;
-
-        .yaxis-label-text {
-            text-transform: uppercase;
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            margin: 2rem 2rem;
-        }
-    }
-
-    .y-marker {
-        height: 70vh;
-        display: flex;
-        flex-direction: column;
-
-        span {
-            height: 100%;
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            color: #fff;
-
-            span {
-                margin-bottom: -1.2vh;
-                margin-right: 0.5vw;
-            }
-
-            hr {
-                width: 1vw;
-                height: 0;
-            }
-        }
-    }
-
-    .bar-container {
-        display: flex:
-        flex-direction: column;
-        width: 80vw;
-        height: 71vh;
-
-        .graphView {
-            border: 3px solid #fff;
-            border-top: none;
-            border-right: none;
-            display: flex;
-            flex-direction: column;
-    
-            .bar-marker {
-                height: 70vh;
-                cursor: pointer;
-                display: flex;
-                flex-direction: row;
-                overflow: hidden;
-                --after-height: 0vh;
-                --after-background: #fff;
-                --after-border: 0px solid transparent;
-
-
-                .bar-column {
-                    width: 100%;
-                    border: 1px solid #424949;
-                    border-top: none;
-                    border-bottom: none;
-                    border-right: none;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: flex-end;
-                    height: 100%;
-
-                    div {
-                        width: 100%;
-                        height: 100%;
-                        border: 1px solid gray;
-                        border-left: none;
-                        border-right: none;
-                        border-top: none;
-                        border-bottom: none;
-                        z-index: 1;
-                        color: #fff;
-                    }
-
-                    div:nth-child(1) {
-                        border-top: none;
-                    }
-                    
-                }
-
-                .bar-column::after {
-                    position: absolute;
-                    content: attr(value);
-                    color: #fff;
-                    background-color: var(--after-background);
-                    height: var(--after-height);
-                    width: 2vw;
-                    transition: 2s ease-out;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: var(--after-border);
-                }
-            }
-        }
-
-        .x-marker {
-            width: 100%;
-            display: flex;
-
-            span {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                color: #fff;
-                align-items: center;
-
-                hr {
-                    width: 0;
-                    height: 2vh;
-                }
-
-                span {
-                    margin-left: -0.2vw;
-                    margin-top: 1vh;
-                }
-            }
-        }
-
-        .xaxis-label {
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            margin: 20px;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-
-            .xaxis-label-text {
-                margin: 0 2rem;
-            }
-        }
-    }
-    .float-btns {
-        display: flex;
-        flex-direction: column;
-        margin-left: 1rem;
-
-        .submit-btn {
-            margin-bottom: 1rem;
-        }
-    }
-`;
