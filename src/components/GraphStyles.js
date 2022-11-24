@@ -1,8 +1,8 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const GraphContainer = styled.div`
-width: 100vw;
-height: 100vh;
+width: 100%;
+height: 100%;
 display: flex;
 justify-content: center;
 align-items: center;
@@ -51,8 +51,8 @@ background-color: #131324;
 .bar-container {
     display: flex:
     flex-direction: column;
-    width: 80vw;
-    height: 71vh;
+    width: 80%;
+    height: 71%;
 
     .graphView {
         border: 3px solid #fff;
@@ -109,7 +109,7 @@ background-color: #131324;
                 background-color: var(--after-background);
                 height: var(--after-height);
                 width: 2vw;
-                transition: 1s ease-out;
+                transition: 0.5s ease-out;
                 display: flex;
                 align-items: center;
                 justify-content: center;
