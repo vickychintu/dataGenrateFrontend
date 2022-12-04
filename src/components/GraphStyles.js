@@ -28,7 +28,7 @@ background-color: #131324;
     height: 70vh;
     display: flex;
     flex-direction: column;
-
+    transform: translateY(-10%);
     span {
         height: 100%;
         display: flex;

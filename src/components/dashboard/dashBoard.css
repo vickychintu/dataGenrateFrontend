@@ -124,7 +124,11 @@
       opacity: 0;
     }
   }
-  .messgeText{
+  .messageText{
     color: #fff;
     font-weight: 20px;
   }
+  .jsonSection{
+    border: 2px solid black;
+  }
+ 

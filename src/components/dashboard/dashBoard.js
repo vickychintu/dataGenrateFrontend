@@ -14,6 +14,16 @@ const Dashboard = () => {
   const [lockedColumn, setLockedColumn] = useState(
     Array.from({ length: 24 }, (v, k) => 0)
   );
+  const [endPoint, setEndPoint] = useState("");
+  const [orderTime, setOrderTime] = useState(1);
+  const [waitTime, setWaitTime] = useState();
+  const formData = new FormData();
+  const [file, setFile] = useState();
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
   const settingLockedColumn = (value) => {
     setLockedColumn(value);
   };
@@ -52,16 +62,22 @@ const Dashboard = () => {
       alert("draw graph pattern");
       return;
     }
+    if (!file) {
+      alert("json uplaod is compulsory");
+    }
+    formData.append("file", file);
+    formData.append("startDate", startDate);
+    formData.append("endDate", endDate);
+    formData.append("weekArray", JSON.stringify(weekArray));
+    formData.append("hourData", JSON.stringify(lockedColumn));
+    formData.append("template", template);
+    formData.append("apiEndPoint", endPoint);
+    formData.append("orderTime", orderTime);
+    formData.append("waitTime", waitTime);
     console.log("trying to send data");
     setLoading(true);
     axios
-      .post("http://localhost:8000/generateData", {
-        startDate,
-        endDate,
-        template,
-        weekArray,
-        hourData: lockedColumn,
-      })
+      .post("http://35.154.31.9:8005/generateData", formData)
       .then((response) => {
         console.log(response.status);
         if (response.status == 200) {
@@ -83,6 +99,15 @@ const Dashboard = () => {
   };
   const checkZero = (arr) => {
     return arr.every((element) => element === 0);
+  };
+  const settingEndPoint = (e) => {
+    setEndPoint(e.target.value);
+  };
+  const settingOrderTime = (e) => {
+    setOrderTime(e.target.value);
+  };
+  const settingWaitingTime = (e) => {
+    setWaitTime(e.target.value);
   };
   return (
     <>
@@ -107,6 +132,17 @@ const Dashboard = () => {
               placeholder="ex:-template type 1"
               onChange={settingTemplate}
             ></input>
+          </div>
+          <div className="apiInputSection">
+            <input
+              type={"text"}
+              onChange={settingEndPoint}
+              placeholder={"api:-http://xyz.com/abc/mbd"}
+            />
+          </div>
+
+          <div className="fileUplaodSection">
+            <input type="file" onChange={handleFileChange} accept=".json" />
           </div>
           <div className="genratesection">
             <button onClick={genrateData} className="generateButton">
@@ -143,7 +179,7 @@ const lodeMessage = (type) => {
       return <div className="messageText">Data genrated successfully</div>;
       break;
     case 3:
-      return <div className="messgeText">Tempalte name already exists</div>;
+      return <div className="messageText">Tempalte name already exists</div>;
       break;
     default:
       return (

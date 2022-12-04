@@ -6,6 +6,7 @@ import { GraphContainer } from "./GraphStyles";
 import "./graph.css";
 
 const yAxis = [];
+const viewYAxis = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
 for (let i = 100; i >= 0; i -= 5) yAxis.push(i);
 
 const xAxis = [];
@@ -188,14 +189,14 @@ const Graph = ({ setLockedColumn, lockedColumn, settingWeekArray }) => {
               <span className="yaxis-label-text">Y-Axis</span>
               <ArrowRightAltIcon style={{ transform: "rotate(90deg)" }} />
             </div>
-            <div className="y-marker">
+            <div className="y-marker" id="ymak">
               {yAxis.map((yaxis, index) => {
                 return (
                   <>
                     {yaxis === 0 ? (
                       <span></span>
                     ) : (
-                      <span key={index}>
+                      <span id="eachSpan" key={index}>
                         <span>{yaxis}</span>
                         <hr />
                       </span>
